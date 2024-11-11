@@ -1,12 +1,12 @@
 import axios from "axios";
 
 // const API_URL = "http://localhost:5000/api/jobs"; // Backend API URL
-const API_URL = `${import.meta.env.VITE_API_URL}/api/jobs`;
+const VITE_API_URL = `${import.meta.env.VITE_API_URL}/api/jobs`;
 
 // Create a new job
 export const createJob = async (jobData) => {
   try {
-    const response = await axios.post(API_URL, jobData);
+    const response = await axios.post(VITE_API_URL, jobData);
     return response.data;
   } catch (error) {
     console.error("Error creating job:", error);
@@ -17,7 +17,7 @@ export const createJob = async (jobData) => {
 // Fetch all jobs
 export const getJobs = async () => {
   try {
-    const response = await axios.get(API_URL);
+    const response = await axios.get(VITE_API_URL);
     return response.data;
   } catch (error) {
     console.error("Error fetching jobs:", error);
@@ -28,7 +28,7 @@ export const getJobs = async () => {
 // Update an existing job by ID
 export const updateJob = async (updatedJob) => {
   try {
-    const url = `${API_URL}/${updatedJob._id}`;
+    const url = `${VITE_API_URL}/${updatedJob._id}`;
     console.log("Updating job at:", url);
     console.log("Payload data:", updatedJob);
 
@@ -56,7 +56,7 @@ export const updateJob = async (updatedJob) => {
 // Delete a job by ID
 export const deleteJob = async (jobId) => {
   try {
-    const response = await axios.delete(`${API_URL}/${jobId}`); // Send DELETE request to delete job
+    const response = await axios.delete(`${VITE_API_URL}/${jobId}`); // Send DELETE request to delete job
     return response.data; // Return the response message
   } catch (error) {
     console.error("Error deleting job:", error);
