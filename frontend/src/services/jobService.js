@@ -1,8 +1,7 @@
 import axios from "axios";
 
 // const API_URL = "http://localhost:5000/api/jobs"; // Backend API URL
-const API_URI = import.meta.env.VITE_API_URL;
-const API_URL = `${API_URI}/jobs`; // Backend API URL
+const API_URL = `${import.meta.env.VITE_API_URL}/api/jobs`;
 
 // Create a new job
 export const createJob = async (jobData) => {

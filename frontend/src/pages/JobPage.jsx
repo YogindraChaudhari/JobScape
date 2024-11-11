@@ -16,7 +16,7 @@ const JobPage = () => {
     const fetchJob = async () => {
       try {
         // const res = await fetch(`http://localhost:5000/api/jobs/${id}`);
-        const res = await fetch(`${API_URL}/jobs/${id}`);
+        const res = await fetch(`${API_URL}/api/jobs/${id}`);
         if (!res.ok) {
           throw new Error("Failed to fetch job details");
         }

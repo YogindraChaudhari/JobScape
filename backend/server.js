@@ -6,7 +6,7 @@ const jobRoutes = require("./routes/jobRoutes"); // Import job routes
 require("dotenv").config();
 
 const app = express();
-app.use(cors());
+app.use(cors()); // Allow all CORS requests for now
 app.use(express.json()); // Middleware to parse JSON requests
 
 // MongoDB connection
@@ -20,8 +20,6 @@ mongoose
 
 // Use the job routes
 app.use("/api", jobRoutes);
-
-app.use(cors({ origin: "http://localhost:1505" }));
 
 // Start the server
 const port = process.env.PORT || 5000;
