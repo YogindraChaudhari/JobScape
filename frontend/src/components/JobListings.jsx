@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import JobListing from "./JobListing";
 import Spinner from "./Spinner";
+const VITE_API_URL = import.meta.env.VITE_API_URL;
 
 const JobListings = ({ isHome = false }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const VITE_API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchJobs = async () => {
