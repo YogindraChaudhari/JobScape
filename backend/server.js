@@ -9,7 +9,7 @@ const app = express();
 // app.use(cors()); // Allow all CORS requests for now
 app.use(
   cors({
-    origin: ["http://localhost:1505", "https://job-scape.vercel.app"], // Allow local and production URLs
+    origin: ["http://localhost:1505", "https://job-scape.vercel.app/"], // Allow local and production frontEnd URLs
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
     credentials: true, // Allow cookies and other credentials
   })
