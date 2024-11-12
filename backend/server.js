@@ -12,7 +12,7 @@ app.use(
     origin: [
       "http://localhost:1505",
       "https://job-scape.vercel.app/",
-      "https://job-scape-yogindravrcls-projects.vercel.app/",
+      "https://job-scape-yogindravrcls-projects.vercel.app",
     ], // Allow local and production frontEnd URLs
     methods: ["GET", "POST", "PUT", "DELETE"], // Allowed HTTP methods
     credentials: true, // Allow cookies and other credentials
