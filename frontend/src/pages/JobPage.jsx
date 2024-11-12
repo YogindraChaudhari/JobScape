@@ -16,7 +16,7 @@ const JobPage = () => {
     const fetchJob = async () => {
       try {
         // const res = await fetch(`http://localhost:5000/api/jobs/${id}`);
-        const res = await fetch(`${VITE_API_URL}/jobs/${id}`);
+        const res = await fetch(`${VITE_API_URL}/api/jobs/${id}`);
         if (!res.ok) {
           throw new Error("Failed to fetch job details");
         }
@@ -44,7 +44,7 @@ const JobPage = () => {
     try {
       // API call to delete the job
       // const res = await fetch(`http://localhost:5000/api/jobs/${jobId}`, {
-      const res = await fetch(`${VITE_API_URL}/jobs/${jobId}`, {
+      const res = await fetch(`${VITE_API_URL}/api/jobs/${jobId}`, {
         method: "DELETE",
       });
       if (!res.ok) {

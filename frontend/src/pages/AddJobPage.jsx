@@ -36,7 +36,7 @@ const AddJobPage = ({ addJobSubmit }) => {
     try {
       // Send POST request to the backend
       // const response = await fetch("http://localhost:5000/api/jobs", {
-      const response = await fetch(`${VITE_API_URL}/jobs`, {
+      const response = await fetch(`${VITE_API_URL}/api/jobs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

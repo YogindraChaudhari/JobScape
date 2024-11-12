@@ -12,8 +12,8 @@ const JobListings = ({ isHome = false }) => {
       const apiUrl = isHome
         ? // ? "http://localhost:5000/api/jobs?limit=3"
           // : "http://localhost:5000/api/jobs";
-          `${VITE_API_URL}/jobs?limit=3`
-        : `${VITE_API_URL}/jobs`;
+          `${VITE_API_URL}/api/jobs?limit=3`
+        : `${VITE_API_URL}/api/jobs`;
       try {
         const res = await fetch(apiUrl);
         if (!res.ok) {
