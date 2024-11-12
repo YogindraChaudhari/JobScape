@@ -60,7 +60,9 @@ const JobPage = () => {
 
   // Display loading or error messages if needed
   if (loading) {
-    return <div>Loading...</div>; // Show a loading state while fetching the job
+    return (
+      <div className="text-center font-bold text-blue-500 p-12">Loading...</div>
+    ); // Show a loading state while fetching the job
   }
 
   if (!job) {
