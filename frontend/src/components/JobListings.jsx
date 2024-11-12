@@ -5,15 +5,15 @@ import Spinner from "./Spinner";
 const JobListings = ({ isHome = false }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
-  const API_URL = import.meta.env.VITE_API_URL;
+  const VITE_API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchJobs = async () => {
       const apiUrl = isHome
         ? // ? "http://localhost:5000/api/jobs?limit=3"
           // : "http://localhost:5000/api/jobs";
-          `${API_URL}/api/jobs?limit=3`
-        : `${API_URL}/api/jobs`;
+          `${VITE_API_URL}/jobs?limit=3`
+        : `${VITE_API_URL}/jobs`;
       try {
         const res = await fetch(apiUrl);
         if (!res.ok) {

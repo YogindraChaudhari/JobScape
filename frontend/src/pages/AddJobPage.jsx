@@ -12,7 +12,7 @@ const AddJobPage = ({ addJobSubmit }) => {
   const [companyDescription, setCompanyDescription] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-  const API_URL = import.meta.env.VITE_API_URL;
+  const VITE_API_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
 
@@ -36,7 +36,7 @@ const AddJobPage = ({ addJobSubmit }) => {
     try {
       // Send POST request to the backend
       // const response = await fetch("http://localhost:5000/api/jobs", {
-      const response = await fetch(`${API_URL}/jobs`, {
+      const response = await fetch(`${VITE_API_URL}/jobs`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
