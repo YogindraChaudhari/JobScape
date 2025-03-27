@@ -11,6 +11,7 @@ app.use(
   cors({
     origin: [
       "http://localhost:1505",
+      "https://jobscape.onrender.com",
       "https://job-scape.vercel.app",
       "https://job-scape-yogindravrcls-projects.vercel.app",
     ], // Allow local and production frontEnd URLs
