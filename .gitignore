@@ -1,0 +1,18 @@
+# Common Node ignores
+node_modules/
+.env
+.env.local
+.env.*.local
+
+# Backend specific
+backend/node_modules/
+backend/.env
+
+# Frontend specific
+frontend/node_modules/
+frontend/.env
+frontend/dist/
+
+# OS files
+.DS_Store
+Thumbs.db
