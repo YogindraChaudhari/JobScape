@@ -77,16 +77,25 @@ exports.getJobs = async (req, res, next) => {
       userAppliedJobIds = new Set(userApplications.map(app => app.job.toString()));
     }
 
-    const jobsWithCounts = await Promise.all(
-      jobs.map(async (job) => {
-        const applicantsCount = await Application.countDocuments({ job: job._id });
-        return { 
-          ...job._doc, 
-          applicantsCount,
-          hasApplied: userAppliedJobIds.has(job._id.toString())
-        };
-      })
-    );
+    // Fix N+1 problem: Group applicant counts for all fetched jobs in one query
+    const jobIds = jobs.map(job => job._id);
+    const applicantCounts = await Application.aggregate([
+      { $match: { job: { $in: jobIds } } },
+      { $group: { _id: "$job", count: { $sum: 1 } } }
+    ]);
+
+    const countMap = {};
+    applicantCounts.forEach(item => {
+      countMap[item._id.toString()] = item.count;
+    });
+
+    const jobsWithCounts = jobs.map((job) => {
+      return { 
+        ...job._doc, 
+        applicantsCount: countMap[job._id.toString()] || 0,
+        hasApplied: userAppliedJobIds.has(job._id.toString())
+      };
+    });
 
     res.json({
       jobs: jobsWithCounts,

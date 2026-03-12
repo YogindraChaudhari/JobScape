@@ -1,10 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { RiSearchLine, RiMapPinLine, RiFilterLine, RiCloseLine } from "react-icons/ri";
 
-const SearchFilter = ({ onSearch }) => {
+const SearchFilter = ({ onSearch, onClear, initialFilters }) => {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
   const [location, setLocation] = useState("");
+
+  useEffect(() => {
+    if (initialFilters) {
+      setSearch(initialFilters.search || "");
+      setType(initialFilters.type || "");
+      setLocation(initialFilters.location || "");
+    }
+  }, [initialFilters]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -13,7 +21,8 @@ const SearchFilter = ({ onSearch }) => {
 
   const handleClear = () => {
     setSearch(""); setType(""); setLocation("");
-    onSearch({ search: "", type: "", location: "" });
+    if (onClear) onClear();
+    else onSearch({ search: "", type: "", location: "" });
   };
 
   const hasFilters = search || type || location;

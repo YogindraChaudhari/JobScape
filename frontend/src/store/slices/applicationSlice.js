@@ -3,6 +3,9 @@ import axios from "axios";
 
 const API_URL = `${import.meta.env.VITE_API_URL}/api/applications`;
 
+// Cache TTL: 3 minutes for applications
+const CACHE_TTL = 3 * 60 * 1000;
+
 const getAuthHeader = (getState) => {
   const token = getState().auth.user?.token;
   return { headers: { Authorization: `Bearer ${token}` } };
@@ -34,32 +37,51 @@ export const applyForJob = createAsyncThunk(
   }
 );
 
-// Get my applications (job_seeker)
+// Get my applications (job_seeker) — with caching
 export const fetchMyApplications = createAsyncThunk(
   "applications/fetchMy",
-  async (_, { getState, rejectWithValue }) => {
+  async (_, { getState, rejectWithValue, signal }) => {
     try {
-      const res = await axios.get(`${API_URL}/my`, getAuthHeader(getState));
+      const res = await axios.get(`${API_URL}/my`, {
+        ...getAuthHeader(getState),
+        signal,
+      });
       return res.data;
     } catch (err) {
+      if (axios.isCancel(err)) return rejectWithValue("Request cancelled");
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch applications"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { applications } = getState();
+      // Skip if recently fetched and have data
+      if (
+        applications.lastFetchedAt &&
+        applications.applications.length > 0 &&
+        Date.now() - applications.lastFetchedAt < CACHE_TTL
+      ) {
+        return false;
+      }
+      return true;
+    },
   }
 );
 
 // Get applications for a job (employer)
 export const fetchJobApplications = createAsyncThunk(
   "applications/fetchForJob",
-  async (jobId, { getState, rejectWithValue }) => {
+  async (jobId, { getState, rejectWithValue, signal }) => {
     try {
-      const res = await axios.get(
-        `${API_URL}/job/${jobId}`,
-        getAuthHeader(getState)
-      );
+      const res = await axios.get(`${API_URL}/job/${jobId}`, {
+        ...getAuthHeader(getState),
+        signal,
+      });
       return res.data;
     } catch (err) {
+      if (axios.isCancel(err)) return rejectWithValue("Request cancelled");
       return rejectWithValue(
         err.response?.data?.message || "Failed to fetch applications"
       );
@@ -109,7 +131,7 @@ export const withdrawApplication = createAsyncThunk(
   "applications/withdraw",
   async (id, { getState, rejectWithValue }) => {
     try {
-      await axios.delete(
+      const res = await axios.delete(
         `${API_URL}/${id}`,
         getAuthHeader(getState)
       );
@@ -132,13 +154,14 @@ export const generateAiCoverLetter = createAsyncThunk(
         `${import.meta.env.VITE_API_URL}/api/ai/generate-cover-letter`,
         jobData,
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
       return res.data.coverLetter;
     } catch (err) {
       return rejectWithValue(
-        err.response?.data?.message || "Failed to generate cover letter. Ensure Groq API key is set in the backend."
+        err.response?.data?.message ||
+          "Failed to generate cover letter. Ensure Groq API key is set in the backend."
       );
     }
   }
@@ -150,9 +173,13 @@ const applicationSlice = createSlice({
     applications: [],
     applicationCounts: {}, // { jobId: count }
     loading: false,
+    listLoading: false,
+    statusLoading: false,
     generatingCoverLetter: false,
     error: null,
     applySuccess: false,
+    lastFetchedAt: null,
+    lastFetchType: null, // 'my' | 'job'
   },
   reducers: {
     clearApplySuccess: (state) => {
@@ -160,6 +187,10 @@ const applicationSlice = createSlice({
     },
     clearAppError: (state) => {
       state.error = null;
+    },
+    invalidateApplicationsCache: (state) => {
+      state.lastFetchedAt = null;
+      state.lastFetchType = null;
     },
   },
   extraReducers: (builder) => {
@@ -173,8 +204,11 @@ const applicationSlice = createSlice({
       .addCase(applyForJob.fulfilled, (state, action) => {
         state.loading = false;
         state.applySuccess = true;
-        // The backend will returns { application, updatedResumeUrl }
-        state.applications.unshift(action.payload.application || action.payload);
+        state.applications.unshift(
+          action.payload.application || action.payload
+        );
+        // Invalidate cache so next fetch gets fresh data
+        state.lastFetchedAt = null;
       })
       .addCase(applyForJob.rejected, (state, action) => {
         state.loading = false;
@@ -182,44 +216,68 @@ const applicationSlice = createSlice({
       })
       // Fetch my
       .addCase(fetchMyApplications.pending, (state) => {
-        state.loading = true;
+        state.listLoading = true;
+        // Only show full spinner if we have no cached data
+        state.loading = state.applications.length === 0;
       })
       .addCase(fetchMyApplications.fulfilled, (state, action) => {
         state.loading = false;
+        state.listLoading = false;
         state.applications = action.payload;
+        state.lastFetchedAt = Date.now();
+        state.lastFetchType = "my";
       })
       .addCase(fetchMyApplications.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.listLoading = false;
+        if (action.payload !== "Request cancelled") {
+          state.error = action.payload;
+        }
       })
       // Fetch for job
       .addCase(fetchJobApplications.pending, (state) => {
-        state.loading = true;
+        state.listLoading = true;
+        state.loading = state.applications.length === 0;
       })
       .addCase(fetchJobApplications.fulfilled, (state, action) => {
         state.loading = false;
+        state.listLoading = false;
         state.applications = action.payload;
+        state.lastFetchedAt = Date.now();
+        state.lastFetchType = "job";
       })
       .addCase(fetchJobApplications.rejected, (state, action) => {
         state.loading = false;
-        state.error = action.payload;
+        state.listLoading = false;
+        if (action.payload !== "Request cancelled") {
+          state.error = action.payload;
+        }
       })
       // Fetch count
       .addCase(fetchApplicationCount.fulfilled, (state, action) => {
         state.applicationCounts[action.payload.jobId] = action.payload.count;
       })
       // Update status
+      .addCase(updateApplicationStatus.pending, (state) => {
+        state.statusLoading = true;
+      })
       .addCase(updateApplicationStatus.fulfilled, (state, action) => {
+        state.statusLoading = false;
         const idx = state.applications.findIndex(
           (a) => a._id === action.payload._id
         );
         if (idx !== -1) state.applications[idx] = action.payload;
+      })
+      .addCase(updateApplicationStatus.rejected, (state) => {
+        state.statusLoading = false;
       })
       // Withdraw application
       .addCase(withdrawApplication.fulfilled, (state, action) => {
         state.applications = state.applications.filter(
           (app) => app._id !== action.payload.id
         );
+        // Invalidate cache
+        state.lastFetchedAt = null;
       })
       // Generate AI Cover Letter
       .addCase(generateAiCoverLetter.pending, (state) => {
@@ -235,5 +293,6 @@ const applicationSlice = createSlice({
   },
 });
 
-export const { clearApplySuccess, clearAppError } = applicationSlice.actions;
+export const { clearApplySuccess, clearAppError, invalidateApplicationsCache } =
+  applicationSlice.actions;
 export default applicationSlice.reducer;
